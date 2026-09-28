@@ -233,20 +233,18 @@ const executeInvoiceGeneration = async () => {
 
 const handleViewInvoice = async () => {
   if (!order.value) return
+  // La pestaña se abre antes del await para que el navegador no la bloquee.
+  const tab = window.open('', '_blank')
   isLoading.value = true
   try {
-    const response = await OrderService.getInvoicePdf(order.value._id)
-    const doc = response.document
-    // Confirmed 'url_ride' is the PDF link based on user feedback
-    const link = doc.url_ride || doc.pdf_link || doc.descargar_pdf || doc.url || doc.mensaje
-
-    if (link && typeof link === 'string' && link.startsWith('http')) {
-      window.open(link, '_blank')
-    } else {
-      showError("No se encontró enlace PDF. Revise la consola.")
-      console.log("Full Doc:", doc)
-    }
+    // El PDF pasa por el backend: abrir el link de Contífico directo falla con
+    // "El objeto no existe" si el navegador tiene sesión en la otra empresa.
+    const pdf = await OrderService.getInvoicePdfFile(order.value._id)
+    const url = URL.createObjectURL(new Blob([pdf], { type: 'application/pdf' }))
+    if (tab) tab.location.href = url
+    else window.open(url, '_blank')
   } catch (e: any) {
+    tab?.close()
     showError("Error al obtener PDF de la factura.")
   } finally {
     isLoading.value = false

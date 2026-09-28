@@ -154,6 +154,15 @@ class OrderService extends APIBase {
     }
   }
 
+  /** El PDF de la factura servido por el backend (no depende de la sesión de Contífico). */
+  async getInvoicePdfFile(id: string): Promise<Blob> {
+    const response = await this.get<Blob>(`orders/${id}/invoice-pdf/file`, undefined, {
+      responseType: 'blob',
+      timeout: 30000,
+    })
+    return response.data
+  }
+
   async getInvoicePdf(id: string): Promise<any> {
     try {
       const response = await this.get<any>(`orders/${id}/invoice-pdf`)
